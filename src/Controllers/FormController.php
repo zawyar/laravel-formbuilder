@@ -111,7 +111,6 @@ class FormController extends Controller
         $user = auth()->user();
         $form = Form::where(['user_id' => $user->id, 'id' => $id])
                     ->with('user')
-                    ->withCount('submissions')
                     ->firstOrFail();
 
         $pageTitle = "Preview Form";
@@ -140,6 +139,7 @@ class FormController extends Controller
 
         return view('formbuilder::forms.edit', compact('form', 'pageTitle', 'saveURL', 'form_roles'));
     }
+
 
     /**
      * Update the specified resource in storage.
@@ -187,4 +187,44 @@ class FormController extends Controller
 
         return back()->with('success', "'{$form->name}' deleted.");
     }
+
+/**
+ * Duplicate the specified resource in storage.
+ *
+ * @param  int  $id
+ * @return \Illuminate\Http\Response
+ */
+public function duplicate($id)
+{
+    $user = auth()->user();
+
+    DB::beginTransaction();
+    // generate a random identifier
+    $identifier = $user->id . '-' . Helper::randomString(20);
+    $input = Form::where(['id' => $id])->firstOrFail();
+    $input->identifier = $identifier;
+    $input = $input->getAttributes();
+    $remove = ['id','custom_submit_url','deleted_at','created_at','updated_at'];
+    $input['user_id']=$user->id;
+    $created = Form::create($input);
+
+    foreach($remove as $key) {
+        unset($created[$key]);
+    }
+    try {
+        // dispatch the event
+        event(new FormCreated($created));
+
+        DB::commit();
+
+        return back();
+
+    } catch (Throwable $e) {
+        info($e);
+
+        DB::rollback();
+
+        return response()->json(['success' => false, 'details' => 'Failed to duplicate the form.']);
+    }
+}
 }
