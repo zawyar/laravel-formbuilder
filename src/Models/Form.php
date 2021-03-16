@@ -8,6 +8,7 @@ Last Updated: 12/29/2018
 namespace jazmy\FormBuilder\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Foundation\Auth\User;
 use Illuminate\Support\Collection;
 
 class Form extends Model
@@ -133,9 +134,18 @@ class Form extends Model
     public static function getForUser($user)
     {
         return static::where('user_id', $user->id)
-                    ->withCount('submissions')
                     ->latest()
                     ->paginate(100);
+    }
+    /**
+     * Get the user that belong to the provided form
+     *
+     * @param User $user
+     * @return Illuminate\Database\Eloquent\Collection
+     */
+    public static function getUser($user_id)
+    {
+        return User::where('id','=',$user_id)->get();
     }
 
     /**
