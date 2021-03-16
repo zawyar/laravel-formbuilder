@@ -18,7 +18,7 @@ Route::middleware('web')
 		 * My submission routes
 		 */
 		Route::resource('/my-submissions', 'MySubmissionController');
-		
+
 		/**
 		 * Form submission management routes
 		 */
@@ -28,8 +28,11 @@ Route::middleware('web')
 				Route::resource('/submissions', 'SubmissionController');
 			});
 
-		/**
+
+
+        /**
 		 * Form management routes
 		 */
 		Route::resource('/forms', 'FormController');
+        Route::post('/forms/{fid}','FormController@duplicate')->name('forms.duplicate');
 	});
